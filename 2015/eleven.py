@@ -4,14 +4,20 @@ def get_input(file_name="eleven.input") -> str:
 
     return puzzle_input
 
+
 def increment(password: str):
-    for i in reversed(range(0,len(password))):
+    for i in reversed(range(0, len(password))):
         if password[i] == "z":
-            password = password[:i] + "a" + password[min(i+1,len(password)):]
+            password = password[:i] + "a" + password[min(i + 1, len(password)) :]
         else:
-            password = password[:i] + chr(ord(password[i])+1) + password[min(i+1,len(password)):]
+            password = (
+                password[:i]
+                + chr(ord(password[i]) + 1)
+                + password[min(i + 1, len(password)) :]
+            )
             break
     return password
+
 
 def consecutive_run_of_chars(password: str) -> bool:
     run_length = 1
@@ -19,7 +25,7 @@ def consecutive_run_of_chars(password: str) -> bool:
 
     for c in password[1:]:
         ascii_code = ord(c)
-        if ascii_code == (prev_code+1):
+        if ascii_code == (prev_code + 1):
             run_length += 1
             prev_code += 1
             if run_length == 3:
@@ -30,14 +36,15 @@ def consecutive_run_of_chars(password: str) -> bool:
     else:
         return False
 
+
 def repeated_pairs(password: str) -> bool:
     for j in range(2):
         prev = password[0]
-        for i,c in enumerate(password[1:]):
+        for i, c in enumerate(password[1:]):
             i += 1
             if c == prev:
                 if j == 0:
-                    password = password[:i-1] + "!?" + password[i+1:]
+                    password = password[: i - 1] + "!?" + password[i + 1 :]
                 break
             prev = c
         else:
@@ -48,14 +55,15 @@ def repeated_pairs(password: str) -> bool:
 def is_valid(password: str) -> bool:
     if "i" in password or "o" in password or "l" in password:
         return False
- 
+
     if not consecutive_run_of_chars(password):
         return False
-    
+
     if not repeated_pairs(password):
         return False
 
     return True
+
 
 def part_one_and_two(puzzle_input: str):
     final = False
