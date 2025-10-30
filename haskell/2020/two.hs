@@ -1,5 +1,3 @@
-import Debug.Trace
-
 firstChar :: String -> Char
 firstChar (c : cs) = c
 firstChar [] = error "Cannot get the first char of an empty string"
