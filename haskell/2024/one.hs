@@ -16,7 +16,7 @@ main = do
 
   let partOneResult = sum (zipWith (\a b -> abs (a - b)) sortedListOne sortedListTwo)
 
-  putStrLn ("Park One Solution " ++ show partOneResult)
+  putStrLn ("Part One Solution " ++ show partOneResult)
 
   let partTwoResult = sum (map (\a -> a * length (filter (== a) sortedListTwo)) sortedListOne)
-  putStrLn ("Park Two Solution " ++ show partTwoResult)
+  putStrLn ("Part Two Solution " ++ show partTwoResult)
