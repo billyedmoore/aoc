@@ -1,24 +1,39 @@
-import Debug.Trace
-
 data Direction = Downwards | Upwards
 
 readInput :: FilePath -> IO [String]
 readInput fileName = fmap lines (readFile fileName)
 
-updatePos :: (Int, Int) -> Int -> (Int -> Int -> Int) -> (Int, Int)
-updatePos (currentPos, zeroCount) amount f =
-  let newPos = (currentPos `f` amount) `mod` 100
-   in trace
-        ("Pos changed " ++ show amount ++ " from " ++ show currentPos ++ " to " ++ show newPos)
-        (newPos, if newPos == 0 then zeroCount + 1 else zeroCount)
+zeroPointingCount :: Int -> Int -> Int
+zeroPointingCount startPos moveAmount
+  | moveAmount == 0 = 0
+  | moveAmount > 0 =
+      let distToNextZero = 100 - (startPos `mod` 100)
+       in if moveAmount >= distToNextZero
+            then 1 + (moveAmount - distToNextZero) `div` 100
+            else 0
+  | moveAmount < 0 =
+      -- This case should not have broken my brain as much as it did
+      let distToNextZero = if startPos == 0 then 100 else startPos `mod` 100
+       in if abs moveAmount >= distToNextZero
+            then 1 + (abs moveAmount - distToNextZero) `div` 100
+            else 0
 
-handleInstruction :: (Int, Int) -> String -> (Int, Int)
-handleInstruction acc ('R' : numStr) = updatePos acc (read numStr) (+)
-handleInstruction acc ('L' : numStr) = updatePos acc (read numStr) (-)
+updatePos :: (Int, Int, Int) -> Int -> (Int, Int, Int)
+updatePos (currentPos, partOneCount, partTwoCount) amount =
+  let newPos = (currentPos + amount) `mod` 100
+   in let zeroCount = zeroPointingCount currentPos amount
+       in ( newPos,
+            if newPos == 0 then partOneCount + 1 else partOneCount,
+            partTwoCount + zeroCount
+          )
+
+handleInstruction :: (Int, Int, Int) -> String -> (Int, Int, Int)
+handleInstruction acc ('R' : numStr) = updatePos acc (read numStr)
+handleInstruction acc ('L' : numStr) = updatePos acc (negate (read numStr))
 handleInstruction acc s = trace ("Received string in unexpected format (" ++ s ++ "), ignoring") acc
 
 main :: IO ()
 main = do
   inputs <- readInput "one.input"
-  let partOneSol = foldl handleInstruction (50, 0) inputs
+  let partOneSol = foldl handleInstruction (50, 0, 0) inputs
   putStrLn ("Park One Solution " ++ show partOneSol)
