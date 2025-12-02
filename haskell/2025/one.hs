@@ -30,10 +30,10 @@ updatePos (currentPos, partOneCount, partTwoCount) amount =
 handleInstruction :: (Int, Int, Int) -> String -> (Int, Int, Int)
 handleInstruction acc ('R' : numStr) = updatePos acc (read numStr)
 handleInstruction acc ('L' : numStr) = updatePos acc (negate (read numStr))
-handleInstruction acc s = trace ("Received string in unexpected format (" ++ s ++ "), ignoring") acc
 
 main :: IO ()
 main = do
   inputs <- readInput "one.input"
-  let partOneSol = foldl handleInstruction (50, 0, 0) inputs
+  let (_, partOneSol, partTwoSol) = foldl handleInstruction (50, 0, 0) inputs
   putStrLn ("Park One Solution " ++ show partOneSol)
+  putStrLn ("Park Two Solution " ++ show partTwoSol)
