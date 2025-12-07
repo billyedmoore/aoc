@@ -1,6 +1,6 @@
 {-
  - I'm sure there are more idomatic/satifiying ways to
- - do this but it works lol. - BM 
+ - do this but it works lol.
  -}
 
 import Data.Map qualified as M
@@ -12,23 +12,12 @@ type PositionSet = S.Set (Int, Int)
 
 type HistoryMap = M.Map (Int, Int) Int
 
-type VisitedSet = S.Set (Int, Int)
-
 readInput :: FilePath -> IO ((Int, Int), PositionSet, (Int, Int))
 readInput fileName =
   fmap processInput (readFile fileName)
   where
     processInput :: String -> ((Int, Int), PositionSet, (Int, Int))
     processInput input =
-type VisitedSet = S.Set (Int, Int)
-
-readInput :: FilePath -> IO ((Int, Int), PositionSet, (Int, Int))
-readInput fileName =
-  fmap processInput (readFile fileName)
-  where
-    processInput :: String -> ((Int, Int), PositionSet, (Int, Int))
-    processInput input =
-
       let inputLines = lines input
        in ((length inputLines, (length . assertHead) inputLines), inputToMap inputLines, getStartPos inputLines)
 
@@ -49,7 +38,7 @@ getStartPos :: [String] -> (Int, Int)
 getStartPos (firstLine : rest) = assertHead [(0, j) | (j, c) <- zip [0 ..] firstLine, c == 'S']
 
 -- position map -> (height,width) of map -> currentPos -> visitedSet -> number of splitters hit,newVisited
-partOne :: PositionSet -> (Int, Int) -> (Int, Int) -> VisitedSet -> (Int, VisitedSet)
+partOne :: PositionSet -> (Int, Int) -> (Int, Int) -> PositionSet -> (Int, PositionSet)
 partOne map (height, width) (i, j) visited =
   let visitedInclCurrent = S.insert (i, j) visited
    in case (S.member (i, j) visited, S.member (i, j) map) of
@@ -78,7 +67,7 @@ partTwo map (height, width) (i, j) history = case (M.lookup (i, j) history, S.me
 
 main :: IO ()
 main = do
-  ((inputHeight, inputWidth), inputMap, startPos) <- readInput "seven_example.input"
+  ((inputHeight, inputWidth), inputMap, startPos) <- readInput "seven.input"
   let (partOneSol, _) = partOne inputMap (inputHeight, inputWidth) startPos S.empty
   putStrLn ("Part One Solution " ++ show partOneSol)
   let (partTwoSol, _) = partTwo inputMap (inputHeight, inputWidth) startPos M.empty
