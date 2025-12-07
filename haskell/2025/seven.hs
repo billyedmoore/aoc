@@ -6,8 +6,6 @@
 import Data.Map qualified as M
 import Data.Set qualified as S
 
-data MapElem = Splitter
-
 type PositionSet = S.Set (Int, Int)
 
 type HistoryMap = M.Map (Int, Int) Int
