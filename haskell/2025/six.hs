@@ -24,7 +24,7 @@ getColumnWidths (op : rest)
        in let len = length whitespace
            in let colWidth = if null restAfterWhitespace then len + 1 else len
                in colWidth : getColumnWidths restAfterWhitespace
-  | otherwise = error ("Unexpected input char: " ++ show op)
+  | otherwise = error ("Invalid Operator: " ++ show op)
 
 parseLine :: [Int] -> String -> [String]
 parseLine (colLen : colsLensRest) s = take colLen s : parseLine colsLensRest (drop (colLen + 1) s)
@@ -39,12 +39,12 @@ prepEqPartTwo (op : nums) = op : (transpose . reverse) nums
 handleEq :: [String] -> Int
 handleEq ("+" : nums) = sum (map read nums)
 handleEq ("*" : nums) = product (map read nums)
-handleEq s = error ("Invlalid Eq: " ++ show s)
+handleEq s = error ("Invalid Operator: " ++ show s)
 
 main :: IO ()
 main = do
   inputs <- readInput "six.input"
   let partOneSol = sum $ map handleEq inputs
   putStrLn ("Part One Solution " ++ show partOneSol)
-  let partTwoSol = sum (map (handleEq . prepEqPartTwo) inputs)
+  let partTwoSol = sum $ map (handleEq . prepEqPartTwo) inputs
   putStrLn ("Part Two Solution " ++ show partTwoSol)
