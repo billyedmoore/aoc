@@ -35,13 +35,34 @@ isValidXmas (i, j) crossword ((mi, mj), (ai, aj), (si, sj)) =
     (Just 'M', Just 'A', Just 'S') -> True
     (m, a, s) -> False
 
-solvePosition :: CrossWord -> (Int, Int) -> Int
-solvePosition crossword coord = case M.lookup coord crossword of
+isValidMasX :: (Int, Int) -> CrossWord -> Bool
+isValidMasX (i, j) crossword =
+  -- (top left, bottom right, top right, bottom left)
+  case ( M.lookup (i + 1, j - 1) crossword,
+         M.lookup (i - 1, j + 1) crossword,
+         M.lookup (i + 1, j + 1) crossword,
+         M.lookup (i - 1, j - 1) crossword
+       ) of
+    (Just 'S', Just 'M', Just 'S', Just 'M') -> True
+    (Just 'M', Just 'S', Just 'S', Just 'M') -> True
+    (Just 'S', Just 'M', Just 'M', Just 'S') -> True
+    (Just 'M', Just 'S', Just 'M', Just 'S') -> True
+    (_, _, _, _) -> False
+
+solvePositionForPartOne :: CrossWord -> (Int, Int) -> Int
+solvePositionForPartOne crossword coord = case M.lookup coord crossword of
   (Just 'X') -> length [v | v <- map (isValidXmas coord crossword) possibleXmasses, v]
   _ -> 0
+
+solvePositionForPartTwo :: CrossWord -> (Int, Int) -> Bool
+solvePositionForPartTwo crossword coord = case M.lookup coord crossword of
+  (Just 'A') -> isValidMasX coord crossword
+  _ -> False
 
 main :: IO ()
 main = do
   inputs <- readInput "four.input"
-  let partOneSol = sum (map (solvePosition inputs) (M.keys inputs))
+  let partOneSol = sum (map (solvePositionForPartOne inputs) (M.keys inputs))
   putStrLn ("Part One Solution " ++ show partOneSol)
+  let partTwoSol = length [e | e <- map (solvePositionForPartTwo inputs) (M.keys inputs), e]
+  putStrLn ("Part Two Solution " ++ show partTwoSol)
