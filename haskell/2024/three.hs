@@ -1,3 +1,5 @@
+{- Who knew one could miss Regex -}
+
 import Data.Char (isDigit)
 import Data.Maybe (fromMaybe, isJust)
 
@@ -38,9 +40,22 @@ handleInputStr (c : str) acc =
    in handleInputStr str (acc + res)
 handleInputStr "" acc = acc
 
+removeDisabledStr :: String -> String
+removeDisabledStr (c : s) = case isSubStr "don't()" s of
+  Just rest -> removeDisabledStr (skipToNextDo s)
+  Nothing -> c : removeDisabledStr s
+removeDisabledStr "" = ""
+
+skipToNextDo :: String -> String
+skipToNextDo (c : s) = case isSubStr "do()" (c : s) of
+  Just rest -> rest
+  Nothing -> skipToNextDo s
+skipToNextDo [] = ""
+
 main :: IO ()
 main = do
   inputs <- readFile "three.input"
   let partOneSol = handleInputStr inputs 0
-  -- putStrLn ("Part One Solution " ++ show partOneSol)
-  print partOneSol
+  putStrLn ("Part One Solution " ++ show partOneSol)
+  let partTwoSol = handleInputStr (removeDisabledStr inputs) 0
+  putStrLn ("Part Two Solution " ++ show partTwoSol)
