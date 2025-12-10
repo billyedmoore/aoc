@@ -1,4 +1,6 @@
+import Control.Monad (forM_, mapM, sequence)
 import Data.List qualified as L
+import Data.SBV
 import Debug.Trace (trace)
 
 readInput :: FilePath -> IO [([Bool], [[Bool]], [Int])]
@@ -39,45 +41,65 @@ solveLinePartOne (target, allButtons) =
       simulateButtonPressesPartOne (length target) buttons == target
     ]
 
-combinationsWithRepetition :: Int -> [a] -> [[a]]
-combinationsWithRepetition 0 _ = [[]]
-combinationsWithRepetition _ [] = []
-combinationsWithRepetition n (x : xs)
-  | n < 0 = []
-  | otherwise = withHead ++ withoutHead
-  where
-    withHead = map (x :) (combinationsWithRepetition (n - 1) (x : xs))
-    withoutHead = combinationsWithRepetition n xs
-
 simulateButtonPressesPartOne :: Int -> [[Bool]] -> [Bool]
 simulateButtonPressesPartOne len buttons =
   let paddedButtons = map (\b -> take len (b ++ repeat False)) buttons
    in map (foldl1 (/=)) (L.transpose paddedButtons)
 
-simulateButtonPressesPartTwo :: Int -> [[Bool]] -> [Int]
-simulateButtonPressesPartTwo len buttons =
-  let paddedButtons = map (\b -> take len (b ++ repeat False)) buttons
-   in let intButtons = map (\b -> [if v then 1 else 0 | v <- b]) paddedButtons
-       in map sum (L.transpose intButtons)
+minimumPresses :: ([[Bool]], [Int]) -> IO (Maybe Int)
+minimumPresses (unpaddedMatrix, target) = do
+  let buttons = map (\b -> take (length target) (b ++ repeat False)) unpaddedMatrix
+  let numButtons = length buttons
+  let names = ["p" ++ show i | i <- [0 .. numButtons - 1]]
 
-tryNpresses :: [Int] -> Int -> [[Bool]] -> Bool
-tryNpresses target n buttons = any (\b -> simulateButtonPressesPartTwo (length target) b == target) (combinationsWithRepetition n buttons)
+  result <- optimize Lexicographic $ do
+    presses <- mapM sInteger names
 
-solveLinePartTwo :: ([Int], [[Bool]]) -> Int
-solveLinePartTwo (target, allButtons) = solveLinePartTwoInternal target allButtons 1
-  where
-    solveLinePartTwoInternal :: [Int] -> [[Bool]] -> Int -> Int
-    solveLinePartTwoInternal target allButtons n =
-      if tryNpresses target n allButtons
-        then trace ("Line " ++ show target ++ " Success  " ++ show n) n
-        else solveLinePartTwoInternal target allButtons (n + 1)
+    forM_ presses $ \p -> constrain (p .>= 0)
+
+    let logicalRows = L.transpose buttons
+
+    forM_ (zip logicalRows target) $ \(rowFlags, targetVal) -> do
+      let activeTerms = [p | (isActive, p) <- zip rowFlags presses, isActive]
+
+      constrain $ sum activeTerms .== literal (fromIntegral targetVal)
+
+    minimize "total" (sum presses)
+
+  case result of
+    LexicographicResult model -> do
+      let maybeValues = map (`getModelValue` model) names
+
+      case sequence maybeValues of
+        Just values ->
+          return (Just (fromIntegral (sum values)))
+        Nothing ->
+          return Nothing
+    _ -> return Nothing
+
+solveAll :: [([[Bool]], [Int])] -> IO (Maybe Int)
+solveAll problems = do
+  results <- mapM minimumPresses problems
+  print results
+
+  case sequence results of
+    Just totals -> return (Just (sum totals))
+    Nothing -> return Nothing
 
 main :: IO ()
 main = do
   inputs <- readInput "ten.input"
 
   let partOneSol = sum (map (\(lights, buttons, _) -> solveLinePartOne (lights, buttons)) inputs)
-  let partTwoSol = sum (map (\(_, buttons, target) -> solveLinePartTwo (target, buttons)) inputs)
+
+  let partTwoInput = map (\(_, b, i) -> (b, i)) inputs
+
+  grandTotal <-
+    solveAll
+      inputList
+
+  case grandTotal of
+    Just total -> putStrLn $ "Part Two Solution " ++ show total
+    Nothing -> putStrLn "Part Two Failed :("
 
   putStrLn ("Part One Solution " ++ show partOneSol)
-  putStrLn ("Part Two Solution " ++ show partTwoSol)
